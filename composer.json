@@ -1,6 +1,9 @@
 {
-  "name": "netresearch/agent-file-search",
+  "name": "netresearch/file-search-skill",
   "description": "AI agent skill for efficient code and file search using ripgrep, ast-grep, fd, rga, tokei",
+  "replace": {
+    "netresearch/agent-file-search": "self.version"
+  },
   "type": "ai-agent-skill",
   "license": "MIT",
   "authors": [
