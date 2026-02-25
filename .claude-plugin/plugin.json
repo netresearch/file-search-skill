@@ -1,0 +1,14 @@
+{
+  "name": "file-search",
+  "version": "1.0.0",
+  "description": "Fast codebase search with ripgrep for text patterns, ast-grep for structural code search, plus fd, rga, tokei, and scc",
+  "repository": "https://github.com/netresearch/file-search-skill",
+  "license": "MIT",
+  "author": {
+    "name": "Netresearch DTT GmbH",
+    "url": "https://www.netresearch.de"
+  },
+  "skills": [
+    "./skills/file-search"
+  ]
+}
