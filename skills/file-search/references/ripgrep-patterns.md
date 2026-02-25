@@ -237,3 +237,102 @@ rg 'pattern' -g '*.{ts,tsx}' -g '!*.test.*' -g '!*.spec.*'
   This is faster than regex matching.
 - **Pipe to `head`** when exploring. You do not need all 10,000 results to
   understand the pattern.
+
+---
+
+## Key Flags Reference
+
+```
+-i              Case-insensitive search
+-w              Match whole words only
+-l              List matching file paths only (no content)
+-c              Count matches per file
+-n              Show line numbers (default)
+-t TYPE         Restrict to file type (e.g., -t py, -t js, -t go)
+-T TYPE         Exclude file type
+-g 'GLOB'       Filter by glob pattern (e.g., -g '*.tsx')
+--json          Machine-readable JSON output
+-A N / -B N     Show N lines after/before match
+-C N            Show N lines of context (before + after)
+-U              Enable multiline matching
+--hidden        Include hidden files (dotfiles)
+--no-ignore     Search files ignored by .gitignore
+-F              Treat pattern as fixed string (no regex)
+-e PATTERN      Specify pattern (useful for multiple patterns or leading dashes)
+--count-matches Count individual matches per file (vs -c which counts matching lines)
+-r REPLACEMENT  Replace matches in output (preview, does not modify files)
+```
+
+---
+
+## Progressive Refinement Strategy
+
+Start narrow, widen only if needed:
+
+```bash
+# 1. Count matches first to gauge scope
+rg -c 'pattern' -t py
+
+# 2. If too many, narrow by directory
+rg -c 'pattern' -t py src/core/
+
+# 3. View results with context
+rg -n -C 2 'pattern' -t py src/core/
+
+# 4. If still too many, add word boundaries or refine regex
+rg -nw 'exactFunction' -t py src/core/
+```
+
+---
+
+## Common Patterns
+
+```bash
+# Find function definitions in Python
+rg 'def \w+\(' -t py
+
+# Find class definitions in TypeScript
+rg 'class \w+' -t ts
+
+# Find all imports of a module
+rg "from ['\"](react|vue)" -t js -t ts
+
+# Find TODO/FIXME comments
+rg '(TODO|FIXME|HACK|XXX):' -n
+
+# Find environment variable usage
+rg '\$\{?\w+\}?' -t sh
+
+# Find SQL injection risks
+rg 'execute\(.*\+.*\)' -t py
+rg '\$\w+.*->query\(' -t php
+
+# Search with multiple patterns
+rg -e 'pattern1' -e 'pattern2' -t js
+
+# Search for multiline patterns (e.g., function with decorator)
+rg -U '@deprecated\n.*def \w+' -t py
+
+# Exclude directories
+rg 'pattern' -g '!vendor/' -g '!node_modules/'
+
+# Fixed string search (no regex interpretation)
+rg -F 'array_map($callback, $items)' -t php
+```
+
+---
+
+## File Type Targeting
+
+ripgrep has built-in type definitions. List all with `rg --type-list`.
+
+Common types: `py`, `js`, `ts`, `go`, `rust`, `java`, `php`, `ruby`, `css`,
+`html`, `json`, `yaml`, `toml`, `md`, `sh`, `sql`, `c`, `cpp`.
+
+```bash
+# Multiple types
+rg 'pattern' -t js -t ts
+
+# Custom type definition (one-off)
+rg --type-add 'web:*.{html,css,js}' -t web 'pattern'
+```

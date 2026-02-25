@@ -422,3 +422,31 @@ sg --pattern '$EXPR?' --lang rust
 
 6. **Whitespace is ignored** in pattern matching. `func ( $ARG )` matches
    `func(arg)`, `func( arg )`, etc.
+
+---
+
+## When to Use ast-grep Over ripgrep
+
+- Matching code **structure** regardless of formatting/whitespace
+- Finding function calls with specific argument patterns
+- Matching patterns that span multiple lines unpredictably
+- Refactoring patterns (find + replace structurally)
+- When regex would be too fragile for the code pattern
+
+---
+
+## Basic Usage
+
+```bash
+# Search with a pattern in a language
+sg --pattern 'console.log($$$)' --lang js
+
+# Search in specific directory
+sg --pattern 'fmt.Errorf($$$)' --lang go src/
+
+# JSON output for programmatic use
+sg --pattern '$FUNC($$$)' --lang py --json
+
+# Find and replace structurally
+sg --pattern 'console.log($$$)' --rewrite 'logger.info($$$)' --lang js
+```
