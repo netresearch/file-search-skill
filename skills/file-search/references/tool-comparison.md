@@ -221,5 +221,5 @@ npm install -g @ast-grep/cli
 - ast-grep: https://github.com/ast-grep/ast-grep
 - fd: https://github.com/sharkdp/fd
 - rga: https://github.com/phiresky/ripgrep-all
-- tokei: https://github.com/XAcode/tokei
+- tokei: https://github.com/XAMPPRocky/tokei
 - scc: https://github.com/boyter/scc

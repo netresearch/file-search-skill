@@ -12,7 +12,7 @@ practices for searching codebases of any size.
 | [ast-grep](https://github.com/ast-grep/ast-grep) (`sg`) | Structural/syntax-aware code search | complex regex hacks |
 | [fd](https://github.com/sharkdp/fd) (`fd`) | Fast file finder | `find` |
 | [ripgrep-all](https://github.com/phiresky/ripgrep-all) (`rga`) | Search PDFs, Office docs, archives | manual text extraction |
-| [tokei](https://github.com/XAcode/tokei) | Fast code statistics by language | `cloc`, `wc -l` |
+| [tokei](https://github.com/XAMPPRocky/tokei) | Fast code statistics by language | `cloc`, `wc -l` |
 | [scc](https://github.com/boyter/scc) | Code counter with complexity analysis | `cloc`, `tokei` (when complexity needed) |
 
 ## Key Principles

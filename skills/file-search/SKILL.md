@@ -53,7 +53,7 @@ PCRE2 regex, and provides structured output options.
 --no-ignore     Search files ignored by .gitignore
 -F              Treat pattern as fixed string (no regex)
 -e PATTERN      Specify pattern (useful for multiple patterns or leading dashes)
---count-matches Total match count (not per-file)
+--count-matches Count individual matches per file (vs -c which counts matching lines)
 -r REPLACEMENT  Replace matches in output (preview, does not modify files)
 ```
 
@@ -162,6 +162,9 @@ sg --pattern 'fmt.Errorf($$$)' --lang go src/
 
 # JSON output for programmatic use
 sg --pattern '$FUNC($$$)' --lang py --json
+
+# Find and replace structurally
+sg --pattern 'console.log($$$)' --rewrite 'logger.info($$$)' --lang js
 ```
 
 ### Quick Examples by Language
