@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create skill package
+        run: |
+          mkdir -p dist
+          cp LICENSE dist/
+          [ -d "skills" ] && cp -r skills dist/
+          [ -d "scripts" ] && cp -r scripts dist/
+          cd dist
+          zip -r ../file-search-skill-${{ steps.version.outputs.version }}.zip .
+          tar -czvf ../file-search-skill-${{ steps.version.outputs.version }}.tar.gz .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          files: |
+            file-search-skill-${{ steps.version.outputs.version }}.zip
+            file-search-skill-${{ steps.version.outputs.version }}.tar.gz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
