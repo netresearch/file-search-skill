@@ -37,7 +37,7 @@ jobs:
     # Pinned to a commit SHA per OpenSSF Scorecard "Pinned-Dependencies"
     # guidance (Renovate keeps the pin current).
     if: github.event_name != 'schedule'
-    uses: netresearch/.github/.github/workflows/codeql.yml@d5ae1bd05f72aed98e84fa974d6a223acf57e089 # main
+    uses: netresearch/.github/.github/workflows/codeql.yml@21ad7d5edabd7e3eadd216d90d89fd43d6dfc326 # main
     permissions:
       contents: read
       security-events: write
@@ -50,7 +50,7 @@ jobs:
     # Pinned to a commit SHA per OpenSSF Scorecard "Pinned-Dependencies"
     # guidance (Renovate keeps the pin current).
     if: github.event_name != 'pull_request'
-    uses: netresearch/.github/.github/workflows/scorecard.yml@d5ae1bd05f72aed98e84fa974d6a223acf57e089 # main
+    uses: netresearch/.github/.github/workflows/scorecard.yml@21ad7d5edabd7e3eadd216d90d89fd43d6dfc326 # main
     permissions:
       contents: read
       security-events: write
