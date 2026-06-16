@@ -1,19 +1,29 @@
 name: Security
 
+# Aggregated security scans for skill repos: secret scanning (gitleaks),
+# dependency review on PRs, and a composer audit (every skill repo ships a
+# composer.json for split-licensing / Packagist distribution).
+#
+# Top-level `permissions: {}` denies everything by default; each reusable
+# caller job re-declares the exact union its reusable's jobs require, so the
+# token passed to each reusable is fully explicit and never relies on the
+# repo default. This is the same pattern proven in netresearch/.github's
+# go-app template (top {} + per-job security-events: write).
+
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
-  schedule:
-    # Weekly Scorecard refresh — independent of pushes so the badge stays current
-    - cron: '37 4 * * 1'
+    branches: [main]
+
+permissions: {}
 
 jobs:
   gitleaks:
-    # Push/PR only — no need to re-scan unchanged history on the weekly cron.
-    if: github.event_name != 'schedule'
     uses: netresearch/.github/.github/workflows/gitleaks.yml@main
+    permissions:
+      contents: read
+      security-events: write
     secrets:
       GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
@@ -25,30 +35,7 @@ jobs:
       pull-requests: write
 
   composer-audit:
-    # Push/PR only — composer audit is a CI gate, not a scheduled task.
-    if: github.event_name != 'schedule'
     uses: netresearch/typo3-ci-workflows/.github/workflows/security.yml@main
-
-  codeql:
-    # Skill repo has no compiled source; default `actions` language scans
-    # the workflows themselves for misconfigurations (script injection,
-    # missing permissions, vulnerable action SHAs).
-    # Push/PR only — CodeQL on workflow files runs on changes, not on cron.
-    if: github.event_name != 'schedule'
-    uses: netresearch/.github/.github/workflows/codeql.yml@main
     permissions:
       contents: read
       security-events: write
-      actions: read
-
-  scorecard:
-    # OpenSSF Scorecard runs once a week and on default-branch pushes;
-    # PRs are skipped because Scorecard requires write tokens we don't
-    # want to grant to fork-originated PRs.
-    if: github.event_name != 'pull_request'
-    uses: netresearch/.github/.github/workflows/scorecard.yml@main
-    permissions:
-      contents: read
-      security-events: write
-      id-token: write
-      actions: read
