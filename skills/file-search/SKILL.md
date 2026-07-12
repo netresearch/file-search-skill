@@ -72,4 +72,4 @@ See [references/remote-handoff.md](references/remote-handoff.md).
 | tokei and scc usage | [references/code-metrics.md](references/code-metrics.md) |
 | Search targeting strategies | [references/search-strategies.md](references/search-strategies.md) |
 | Remote context handoff guide | [references/remote-handoff.md](references/remote-handoff.md) |
-| Modern CLI tools comparison (legacy→modern, all domains) | [cli-tools-skill's table](https://github.com/netresearch/cli-tools-skill/blob/main/skills/cli-tools/SKILL.md#preferred-modern-tools) |
+| Modern CLI tools comparison (legacy→modern, all domains) | [cli-tools-skill/SKILL.md#preferred-modern-tools](https://github.com/netresearch/cli-tools-skill/blob/main/skills/cli-tools/SKILL.md#preferred-modern-tools) |

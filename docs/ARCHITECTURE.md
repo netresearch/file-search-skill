@@ -18,6 +18,7 @@ Main entry point loaded by agent frameworks. Contains:
 Detailed guides for each tool:
 - **ripgrep-patterns.md** — rg flags, regex patterns, and recipes by use case
 - **ast-grep-patterns.md** — structural/AST search patterns organized by language
+- **semgrep-patterns.md** — security/lint rules, taint mode, registry
 - **fd-guide.md** — fd file finder usage and patterns
 - **rga-guide.md** — ripgrep-all for PDFs, Office docs, archives
 - **search-strategies.md** — search targeting and narrowing strategies

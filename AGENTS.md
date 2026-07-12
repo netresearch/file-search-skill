@@ -11,6 +11,7 @@
 │   └── references/
 │       ├── ripgrep-patterns.md         # rg flags, patterns, and recipes
 │       ├── ast-grep-patterns.md        # Structural search patterns by language
+│       ├── semgrep-patterns.md         # Security/lint rules, taint mode, registry
 │       ├── fd-guide.md                 # fd file finder guide
 │       ├── rga-guide.md               # ripgrep-all for non-code files
 │       ├── search-strategies.md        # Search targeting strategies
@@ -51,6 +52,7 @@ Git hooks are auto-configured via `.envrc` (`git config core.hooksPath Build/hoo
 - [SKILL.md](skills/file-search/SKILL.md) — full skill definition and tool selection guide
 - [ripgrep Patterns](skills/file-search/references/ripgrep-patterns.md) — rg patterns and recipes
 - [ast-grep Patterns](skills/file-search/references/ast-grep-patterns.md) — structural search by language
+- [Semgrep Patterns](skills/file-search/references/semgrep-patterns.md) — security/lint rules, taint mode
 - [fd Guide](skills/file-search/references/fd-guide.md) — file finder reference
 - [rga Guide](skills/file-search/references/rga-guide.md) — searching non-code files
 - [Search Strategies](skills/file-search/references/search-strategies.md) — targeting strategies
