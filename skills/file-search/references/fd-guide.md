@@ -3,6 +3,9 @@
 Fast, user-friendly file finder. Replaces `find` with sane defaults: respects
 `.gitignore`, colorized output, regex by default, smart case.
 
+On Debian/Ubuntu the apt package installs the binary as `fdfind` — alias or
+symlink it to `fd`.
+
 ---
 
 ## Key Flags
