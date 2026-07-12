@@ -11,9 +11,9 @@
 │   └── references/
 │       ├── ripgrep-patterns.md         # rg flags, patterns, and recipes
 │       ├── ast-grep-patterns.md        # Structural search patterns by language
+│       ├── semgrep-patterns.md         # Security/lint rules, taint mode, registry
 │       ├── fd-guide.md                 # fd file finder guide
 │       ├── rga-guide.md               # ripgrep-all for non-code files
-│       ├── tool-comparison.md          # Detailed tool comparison and decision guide
 │       ├── search-strategies.md        # Search targeting strategies
 │       ├── code-metrics.md            # tokei/scc code statistics guide
 │       └── remote-handoff.md          # When to hand off to remote tools
@@ -52,9 +52,9 @@ Git hooks are auto-configured via `.envrc` (`git config core.hooksPath Build/hoo
 - [SKILL.md](skills/file-search/SKILL.md) — full skill definition and tool selection guide
 - [ripgrep Patterns](skills/file-search/references/ripgrep-patterns.md) — rg patterns and recipes
 - [ast-grep Patterns](skills/file-search/references/ast-grep-patterns.md) — structural search by language
+- [Semgrep Patterns](skills/file-search/references/semgrep-patterns.md) — security/lint rules, taint mode
 - [fd Guide](skills/file-search/references/fd-guide.md) — file finder reference
 - [rga Guide](skills/file-search/references/rga-guide.md) — searching non-code files
-- [Tool Comparison](skills/file-search/references/tool-comparison.md) — decision guide
 - [Search Strategies](skills/file-search/references/search-strategies.md) — targeting strategies
 - [Code Metrics](skills/file-search/references/code-metrics.md) — tokei/scc guide
 - [Remote Handoff](skills/file-search/references/remote-handoff.md) — when to use remote tools
