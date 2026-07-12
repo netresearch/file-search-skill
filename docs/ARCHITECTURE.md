@@ -20,7 +20,6 @@ Detailed guides for each tool:
 - **ast-grep-patterns.md** — structural/AST search patterns organized by language
 - **fd-guide.md** — fd file finder usage and patterns
 - **rga-guide.md** — ripgrep-all for PDFs, Office docs, archives
-- **tool-comparison.md** — detailed comparison and decision guide between tools
 - **search-strategies.md** — search targeting and narrowing strategies
 - **code-metrics.md** — tokei and scc for code statistics and complexity
 - **remote-handoff.md** — guidance on when to hand off to remote tools (issues, PRs, wikis)

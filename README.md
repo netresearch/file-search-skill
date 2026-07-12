@@ -101,7 +101,6 @@ skills/file-search/
     semgrep-patterns.md             # Security/lint rules, taint mode, registry
     fd-guide.md                     # fd file finder guide
     rga-guide.md                    # ripgrep-all for non-code files
-    tool-comparison.md              # Detailed comparison and decision guide
     search-strategies.md            # Search targeting strategies
     code-metrics.md                 # tokei/scc code statistics guide
     remote-handoff.md               # When to hand off to remote tools
