@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "file-search",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "Fast codebase search with ripgrep for text patterns, ast-grep for structural code search, plus fd, rga, tokei, and scc",
   "author": {
     "name": "Netresearch DTT GmbH",
