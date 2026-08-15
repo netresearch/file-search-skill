@@ -24,6 +24,7 @@
 ├── composer.json                       # PHP package metadata
 ├── docs/
 │   └── ARCHITECTURE.md                 # Architecture overview
+├── hooks/hooks.json                    # Registers the PreToolUse search nudge (ships with the plugin)
 ├── scripts/
 │   └── verify-harness.sh              # Harness verification script
 └── README.md
