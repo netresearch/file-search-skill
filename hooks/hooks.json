@@ -1,0 +1,17 @@
+{
+  "description": "Points shell searches at the search tools — warns once per rule per session when grep/find is used where rg/fd or the Grep/Glob tools fit",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/pre_bash_search_nudge.py",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}
