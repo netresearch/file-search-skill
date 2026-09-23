@@ -1,6 +1,6 @@
 {
   "name": "file-search",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Fast codebase search with ripgrep for text patterns, ast-grep for structural code search, plus fd, rga, tokei, and scc",
   "author": {
     "name": "Netresearch DTT GmbH",
