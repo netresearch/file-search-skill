@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # Beyond Local Files — Remote Handoff Guide
 
 This skill covers local CLI search tools. When the context you need lives

@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # Enforcement Hook
 
 This skill's tool table — `rg` instead of `grep`, `fd` instead of `find`, `sg`

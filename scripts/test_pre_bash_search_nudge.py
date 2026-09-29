@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
 """Cases for scripts/pre_bash_search_nudge.py — run it, read what it says."""
 
 import json

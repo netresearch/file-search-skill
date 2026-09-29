@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # Code Metrics: tokei and scc
 
 Fast codebase analysis tools for counting lines of code, comments, and blanks

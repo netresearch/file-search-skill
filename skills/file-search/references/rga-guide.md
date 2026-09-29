@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # rga (ripgrep-all) Guide
 
 Extends ripgrep to search inside PDFs, Word/Excel/PowerPoint, SQLite databases,

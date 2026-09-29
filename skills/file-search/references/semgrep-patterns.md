@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # semgrep Pattern Recipes
 
 Rule-driven structural code search with semgrep, focused on security and

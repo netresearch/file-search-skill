@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # fd Guide
 
 Fast, user-friendly file finder. Replaces `find` with sane defaults: respects

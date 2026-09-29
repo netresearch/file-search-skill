@@ -1,4 +1,6 @@
 ---
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
 name: file-search
 description: "Use when searching codebases (text, structural/AST, files by name, PDFs/archives, code stats) or building context before a task."
 license: "(MIT AND CC-BY-SA-4.0). See LICENSE-MIT and LICENSE-CC-BY-SA-4.0"

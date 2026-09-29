@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
 """PreToolUse hook for Bash: point shell searches at the search tools.
 
 This skill's table — `rg` instead of `grep`/`grep -r`, `fd` instead of `find`,

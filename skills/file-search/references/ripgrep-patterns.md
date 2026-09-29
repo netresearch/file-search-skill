@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # ripgrep Pattern Recipes
 
 Practical `rg` patterns organized by use case. All examples assume you are in
