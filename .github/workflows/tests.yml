@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
+
+name: Skill Tests
+
+# Runs the behavioural tests of the PreToolUse hook
+# (scripts/test_pre_bash_search_nudge.py) via the skill-repo-skill reusable.
+# The other workflows validate structure, lint and security; none of them
+# executes scripts/pre_bash_search_nudge.py. The test lives next to the hook
+# under scripts/, not under tests/, so the reusable's default python_glob would
+# match nothing. Not part of the central skill template, so it carries its own
+# notice.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+jobs:
+  tests:
+    uses: netresearch/skill-repo-skill/.github/workflows/tests.yml@main
+    permissions:
+      contents: read
+    with:
+      python_glob: "scripts/test_*.py"
