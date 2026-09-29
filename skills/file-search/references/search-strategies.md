@@ -73,8 +73,8 @@ fd -e py -E __pycache__ -E .venv -E '*.pyc'
 
 ## 6. Batch & Parallelize Independent Queries
 
-`rg` walks the filesystem once per invocation. N sequential calls = N walks
-+ N startup costs. Two ways to collapse that:
+`rg` walks the filesystem once per invocation. N sequential calls =
+N walks + N startup costs. Two ways to collapse that:
 
 ### 6a. Union patterns in one process (`rg -e ... -e ...`)
 
