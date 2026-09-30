@@ -166,7 +166,7 @@ The security assurance case for this skill (threat model, trust boundaries, coun
 Checks that run on pull requests in this repository:
 
 - Every pull request: Skill Validation (`lint.yml`: skill structure, manifest sync, markdownlint, yamllint, actionlint, JSON syntax, version parity, ShellCheck on `*.sh` files, ruff), Eval Validation (`eval-validate.yml`) and Skill Tests (`tests.yml`).
-- Pull requests to `main`: `security.yml` with Betterleaks (secret scanning), zizmor (workflow static analysis), dependency review (fails on vulnerabilities of severity high or above), Composer Audit and Opengrep SAST (fails on findings of severity WARNING or above); Harness Verification (`harness-verify.yml`) and Template Drift (`check-template-drift.yml`).
+- Pull requests to `main`: `security.yml` with Betterleaks (secret scanning), zizmor (workflow static analysis), dependency review (fails on vulnerabilities of severity high or above), Composer Audit and Opengrep SAST (`--severity WARNING`: fails on findings of WARNING-level rules only; ERROR-level rules are not reported, see netresearch/typo3-ci-workflows#268); Harness Verification (`harness-verify.yml`) and Template Drift (`check-template-drift.yml`).
 
 ## License
 
