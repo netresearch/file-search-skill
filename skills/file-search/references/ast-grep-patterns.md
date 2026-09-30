@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # ast-grep Pattern Recipes
 
 Structural search patterns for `sg` (ast-grep), organized by language.

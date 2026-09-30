@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # File Search Skill
 
 [![CI](https://github.com/netresearch/file-search-skill/actions/workflows/lint.yml/badge.svg)](https://github.com/netresearch/file-search-skill/actions/workflows/lint.yml)
@@ -119,7 +122,51 @@ skills/file-search/
     search-strategies.md            # Search targeting strategies
     code-metrics.md                 # tokei/scc code statistics guide
     remote-handoff.md               # When to hand off to remote tools
+    enforcement-hook.md             # What the PreToolUse search nudge says and stays out of
+hooks/hooks.json                    # Registers the PreToolUse search nudge for the Bash tool
+scripts/
+  pre_bash_search_nudge.py          # The hook (Python, standard library only)
+  test_pre_bash_search_nudge.py     # Its behavioural tests
 ```
+
+The components and the hook's data flow are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Contributing
+
+Contributions follow the [Netresearch contributing guide](https://github.com/netresearch/.github/blob/main/CONTRIBUTING.md). `pre-commit run --all-files` runs the Skill Validation linters locally; `pre-commit install --install-hooks` installs them as a commit hook, but pre-commit refuses while `core.hooksPath` is set, which `.envrc` does (it points git at `Build/hooks`). The local linters are stricter than CI: markdownlint checks every Markdown file (CI: the root files), and ShellCheck runs at its default `style` severity on every file pre-commit identifies as shell, `.envrc` and `Build/hooks/pre-push` included (CI: `error`, on `*.sh` files only).
+
+### Tests
+
+The behavioural tests of the PreToolUse hook need only Python 3.10 or later:
+
+```bash
+python3 scripts/test_pre_bash_search_nudge.py
+```
+
+- The script runs `scripts/pre_bash_search_nudge.py` as a subprocess with a hook payload per case and checks the output. It covers the three reminders (`find`, recursive `grep`, plain `grep`), the commands that must stay silent (`rg`, `fd`, a `grep` behind a pipe, a `grep` on a `.json` file, search commands that only appear in a PR body, an `echo` or a `gh api -f body=` value), the once-per-rule-per-session deduplication (a second firing of the same rule is silent, another rule still fires, a new session warns again), and that a session id cannot steer the state file out of the temp directory.
+- Each case prints one line: `OK` or `FEHL`, the case name, the expected result (`erwartet`) and the actual one (`ok` or `erhalten`). The last line is `---- Fehlschlaege: N`, the number of failing cases; the script exits 1 when N is not 0.
+- When it finishes, the script deletes every `file-search-hook-seen-*` file in the system temp directory, so reminders already shown in a running session appear once more.
+
+In CI, the Skill Tests workflow (`.github/workflows/tests.yml`) runs the script on every pull request and on pushes to `main`.
+
+A pull request that changes what the hook reports or stays silent about adds a case to `scripts/test_pre_bash_search_nudge.py` that fails without the change.
+
+## Governance and policies
+
+This repository follows the Netresearch organisation policies:
+
+- [Governance](https://github.com/netresearch/.github/blob/main/GOVERNANCE.md): ownership, roles, how decisions are made and disputes resolved, and continuity.
+- [Roadmap](https://github.com/netresearch/.github/blob/main/ROADMAP.md): planned and explicitly excluded work for the coming year.
+- [Handling of dependency and code analysis findings](https://github.com/netresearch/.github/blob/main/SECURITY.md#handling-of-dependency-and-code-analysis-findings): thresholds, deadlines and the exception process for dependency (SCA) and static analysis (SAST) findings.
+- [Secret management](https://github.com/netresearch/.github/blob/main/SECURITY.md#secret-management): how CI and release credentials are stored, accessed and rotated.
+- [Access roster](https://github.com/netresearch/.github/blob/main/docs/access-roster.md): who holds administrative access to this repository and the organisation.
+
+The security assurance case for this skill (threat model, trust boundaries, countermeasures and limits) is in [docs/SECURITY-ASSURANCE.md](docs/SECURITY-ASSURANCE.md).
+
+Checks that run on pull requests in this repository:
+
+- Every pull request: Skill Validation (`lint.yml`: skill structure, manifest sync, markdownlint, yamllint, actionlint, JSON syntax, version parity, ShellCheck on `*.sh` files, ruff), Eval Validation (`eval-validate.yml`) and Skill Tests (`tests.yml`).
+- Pull requests to `main`: `security.yml` with Betterleaks (secret scanning), zizmor (workflow static analysis), dependency review (fails on vulnerabilities of severity high or above), Composer Audit and Opengrep SAST (failure threshold: [organisation SAST rule](https://github.com/netresearch/.github/blob/main/SECURITY.md#static-analysis-sast)); Harness Verification (`harness-verify.yml`) and Template Drift (`check-template-drift.yml`).
 
 ## License
 

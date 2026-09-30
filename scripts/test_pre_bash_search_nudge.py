@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
 """Cases for scripts/pre_bash_search_nudge.py — run it, read what it says."""
 
+import hashlib
 import json
 import os
 import subprocess
@@ -54,6 +57,18 @@ def run(cmd: str, session_id: str | None = None) -> str:
     return p.stdout
 
 
+def run_raw(payload_text: str) -> tuple[int, str]:
+    """Run the hook on a literal stdin text; return exit code and stdout."""
+    p = subprocess.run(
+        [sys.executable, HOOK],
+        input=payload_text,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return p.returncode, p.stdout
+
+
 def main() -> int:
     fails = 0
     sid = f"test-{uuid.uuid4()}"
@@ -85,14 +100,68 @@ def main() -> int:
 
         # A session id carrying separators must not steer the state file out of
         # the temp directory.
-        run("grep -rn A src/", "../../../../tmp/evil-search")
+        evil_sid = "../../../../tmp/evil-search"
+        run("grep -rn A src/", evil_sid)
         escaped = os.path.exists("/tmp/evil-search")
+        # The state file must be named after the digest and sit in the temp
+        # directory itself; an unhashed id fails this even where the escaped
+        # write itself went nowhere.
+        digest = hashlib.sha256(evil_sid.encode("utf-8")).hexdigest()[:16]
+        in_tmp = os.path.isfile(
+            os.path.join(tempfile.gettempdir(), f"file-search-hook-seen-{digest}.json")
+        )
+        escaped = escaped or not in_tmp
         ok = not escaped
         fails += 0 if ok else 1
         print(
             f"  {'OK  ' if ok else 'FEHL'} {'Pfad-Traversal in der Session-ID':44} "
             f"erwartet=False        erhalten={escaped}"
         )
+
+        # Fail open: payloads of an unexpected shape and a state file with
+        # unexpected content end with exit 0 and no output, never a traceback.
+        bad_sid = f"test-badstate-{uuid.uuid4()}"
+        bad_key = hashlib.sha256(bad_sid.encode("utf-8")).hexdigest()[:16]
+        with open(
+            os.path.join(
+                tempfile.gettempdir(), f"file-search-hook-seen-{bad_key}.json"
+            ),
+            "w",
+            encoding="utf-8",
+        ) as fh:
+            fh.write("5")
+        bad_state = json.dumps(
+            {
+                "tool_name": "Bash",
+                "tool_input": {"command": "grep -rn A src/"},
+                "session_id": bad_sid,
+            }
+        )
+        for name, text in (
+            ("Payload ist eine Liste", "[]"),
+            (
+                "command ist keine Zeichenkette",
+                '{"tool_name": "Bash", "tool_input": {"command": 123}}',
+            ),
+            (
+                "transcript_path ist eine Zahl",
+                json.dumps(
+                    {
+                        "tool_name": "Bash",
+                        "tool_input": {"command": "grep -rn A src/"},
+                        "transcript_path": 5,
+                    }
+                ),
+            ),
+            ("Zustandsdatei ist eine Zahl", bad_state),
+        ):
+            got = run_raw(text)
+            ok = got == (0, "")
+            fails += 0 if ok else 1
+            print(
+                f"  {'OK  ' if ok else 'FEHL'} {'exit 0 ohne Ausgabe: ' + name:44} "
+                f"erwartet=(0, '') erhalten=({got[0]}, {len(got[1])} Zeichen)"
+            )
     finally:
         for stale in os.listdir(tempfile.gettempdir()):
             if stale.startswith("file-search-hook-seen-"):

@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
 """PreToolUse hook for Bash: point shell searches at the search tools.
 
 This skill's table — `rg` instead of `grep`/`grep -r`, `fd` instead of `find`,
@@ -161,4 +163,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # Fail open: any error ends with exit 0, see the module docstring.
+    try:
+        sys.exit(main())
+    except Exception:  # noqa: BLE001
+        sys.exit(0)
