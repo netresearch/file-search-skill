@@ -163,7 +163,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Fail open: any error ends with exit 0, see the module docstring.
     try:
         sys.exit(main())
-    except Exception:  # noqa: BLE001 - fail open: exit 0, see the module docstring
+    except Exception:  # noqa: BLE001
         sys.exit(0)
