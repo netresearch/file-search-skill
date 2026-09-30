@@ -3,6 +3,7 @@
 # SPDX-FileCopyrightText: Netresearch DTT GmbH
 """Cases for scripts/pre_bash_search_nudge.py — run it, read what it says."""
 
+import hashlib
 import json
 import os
 import subprocess
@@ -87,8 +88,17 @@ def main() -> int:
 
         # A session id carrying separators must not steer the state file out of
         # the temp directory.
-        run("grep -rn A src/", "../../../../tmp/evil-search")
+        evil_sid = "../../../../tmp/evil-search"
+        run("grep -rn A src/", evil_sid)
         escaped = os.path.exists("/tmp/evil-search")
+        # The state file must be named after the digest and sit in the temp
+        # directory itself; an unhashed id fails this even where the escaped
+        # write itself went nowhere.
+        digest = hashlib.sha256(evil_sid.encode("utf-8")).hexdigest()[:16]
+        in_tmp = os.path.isfile(
+            os.path.join(tempfile.gettempdir(), f"file-search-hook-seen-{digest}.json")
+        )
+        escaped = escaped or not in_tmp
         ok = not escaped
         fails += 0 if ok else 1
         print(
