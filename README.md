@@ -133,7 +133,7 @@ The components and the hook's data flow are described in [docs/ARCHITECTURE.md](
 
 ## Contributing
 
-Contributions follow the [Netresearch contributing guide](https://github.com/netresearch/.github/blob/main/CONTRIBUTING.md). Install the local hooks once with `pre-commit install --install-hooks`; they run the same linters as the Skill Validation workflow.
+Contributions follow the [Netresearch contributing guide](https://github.com/netresearch/.github/blob/main/CONTRIBUTING.md). `pre-commit run --all-files` runs the Skill Validation linters locally; `pre-commit install --install-hooks` installs them as a commit hook, but pre-commit refuses while `core.hooksPath` is set, which `.envrc` does (it points git at `Build/hooks`). The local linters are stricter than CI in two places: markdownlint checks every Markdown file (CI: the root files), and ShellCheck runs at its default `style` severity (CI: `error`).
 
 ### Tests
 
