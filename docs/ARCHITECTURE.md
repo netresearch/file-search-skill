@@ -40,7 +40,7 @@ Detailed guides for each tool:
 
 `hooks/hooks.json` registers the hook for the `Bash` tool: Claude Code runs `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/pre_bash_search_nudge.py` before each Bash call, with a timeout of 3 seconds. The script uses only the Python standard library.
 
-**Input.** The harness writes a JSON payload to the script's stdin. The script reads `tool_name`, `tool_input.command`, and `session_id` (or, when that is absent, the file name of `transcript_path`). Anything other than a Bash call with a non-empty command, or a payload that is not valid JSON, ends the script with exit 0 and no output.
+**Input.** The harness writes a JSON payload to the script's stdin. The script reads `tool_name`, `tool_input.command`, and `session_id` (or, when that is absent, the file name of `transcript_path`). Anything other than a Bash call with a non-empty command, or a payload that is not valid JSON, ends the script with exit 0 and no output. Valid JSON of an unexpected shape (not an object, a `tool_input` that is not an object) is not type-checked: the script then ends with a Python traceback and exit 1, which Claude Code treats as a non-blocking error, so the command still runs.
 
 **Processing.** The command is only analysed with regular expressions; the script never executes it.
 
@@ -50,7 +50,7 @@ Detailed guides for each tool:
 4. **Plain grep** at the start of the command → reminder to prefer the Grep tool or `rg`.
 5. The grep rules stay silent when the command names a structured file (`.json`, `.jsonl`, `.yaml`, `.yml`, `.toml`, `.xml`, `.csv`, `.tsv`); those belong to the data-tools plugin's gate. A `grep` behind a pipe that is not recursive is output filtering and gets no message.
 
-**Output.** When a rule fires for the first time in a session, the script prints one JSON object with `systemMessage` (the reminders, prefixed `file-search:`) and `suppressOutput: true`; the command runs unchanged. Otherwise it prints nothing. The hook never denies a command, and every handled path exits 0.
+**Output.** When a rule fires for the first time in a session, the script prints one JSON object with `systemMessage` (the reminders, prefixed `file-search:`) and `suppressOutput: true`; the command runs unchanged. Otherwise it prints nothing. The hook never denies a command. Every handled path exits 0; the unhandled payload shapes under **Input** exit 1.
 
 **State.** For the once-per-rule-per-session behaviour the script keeps a JSON list of hashes of the reminders already shown in `file-search-hook-seen-<first 16 hex of SHA-256(session id)>.json` in the system temp directory (`tempfile.gettempdir()`). Hashing the session id keeps the file name inside that directory whatever the payload contains. When there is no session id, or the file cannot be read or written, every reminder is shown.
 
@@ -98,7 +98,7 @@ The skill content flows one way: the agent framework reads `SKILL.md` and the re
 
 - **Documentation plus one reminder**: the rule is taught by the skill content and reinforced by the hook, which ships in the same plugin so installing the skill installs the reminder (`references/enforcement-hook.md`).
 - **Warn only, once per rule per session**: a shell search is never blocked; repeated reminders add nothing after the first (`scripts/pre_bash_search_nudge.py` docstring).
-- **Fail open**: the hook exits 0 on malformed input and when its state file is unusable, so a broken hook never blocks the shell.
+- **Fail open**: the hook exits 0 on input that is not JSON and when its state file cannot be read or written; a payload of an unexpected shape ends with exit 1, which Claude Code does not treat as a block. A broken hook therefore never blocks the shell.
 - **Split licensing**: code under MIT, content under CC-BY-SA-4.0.
 - **Composer integration**: published as a PHP package for projects using the composer-agent-skill-plugin.
 - **Comprehensive references**: each tool has its own dedicated reference doc for deep-dive usage.
