@@ -66,6 +66,13 @@ rga requires adapters to process different file types:
 Install adapters: `sudo apt install poppler-utils` (Debian/Ubuntu) or
 `brew install poppler` (macOS).
 
+Without poppler and without root, read a single PDF through `pypdf` in a
+throwaway environment:
+
+```bash
+uv run -q --no-project --with pypdf python3 -c "import sys, pypdf; print('\n'.join(p.extract_text() for p in pypdf.PdfReader(sys.argv[1]).pages))" file.pdf
+```
+
 ---
 
 ## Cache Behavior
