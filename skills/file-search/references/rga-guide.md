@@ -70,7 +70,7 @@ Without poppler and without root, read a single PDF through `pypdf` in a
 throwaway environment:
 
 ```bash
-uv run -q --with pypdf python3 -c "import sys, pypdf; print('\n'.join(p.extract_text() for p in pypdf.PdfReader(sys.argv[1]).pages))" file.pdf
+uv run -q --no-project --with pypdf python3 -c "import sys, pypdf; print('\n'.join(p.extract_text() for p in pypdf.PdfReader(sys.argv[1]).pages))" file.pdf
 ```
 
 ---
