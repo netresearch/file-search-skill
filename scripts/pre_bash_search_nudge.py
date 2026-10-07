@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 
@@ -105,6 +106,90 @@ def _session_key(payload: dict) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
+_NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+# Where the platform can, every access goes through a descriptor of the state
+# directory, so the directory checked is the directory used.
+_DIR_FD = (
+    hasattr(os, "O_DIRECTORY")
+    and os.open in os.supports_dir_fd
+    # os.replace takes the same dir_fd arguments but is never listed in
+    # supports_dir_fd; os.rename is, and on POSIX it also replaces the target.
+    and os.rename in os.supports_dir_fd
+)
+
+
+def _state_dir() -> tuple[int | None, str] | None:
+    """The user's own state directory under the temp directory, or None.
+
+    Returns a descriptor of the directory (None where the platform has no
+    dir_fd support) and its path. The directory is created with mode 0700. An
+    existing one is used only when it is a real directory (not a symlink) owned
+    by the current user and closed to group and others; anything else returns
+    None and the caller shows every reminder.
+    """
+    getuid = getattr(os, "getuid", None)
+    suffix = str(getuid()) if getuid else "user"
+    path = os.path.join(tempfile.gettempdir(), f"file-search-hook-{suffix}")
+    try:
+        os.mkdir(path, 0o700)
+    except FileExistsError:
+        pass
+    except OSError:
+        return None
+    fd = None
+    try:
+        if _DIR_FD:
+            fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | _NOFOLLOW)
+            st = os.fstat(fd)
+        else:
+            st = os.lstat(path)
+    except OSError:
+        return None
+    if not stat.S_ISDIR(st.st_mode) or (
+        getuid and (st.st_uid != getuid() or st.st_mode & 0o077)
+    ):
+        if fd is not None:
+            os.close(fd)
+        return None
+    return fd, path
+
+
+def _open(
+    dir_fd: int | None, base: str, name: str, flags: int, mode: int = 0o600
+) -> int:
+    if dir_fd is None:
+        return os.open(os.path.join(base, name), flags, mode)
+    return os.open(name, flags, mode, dir_fd=dir_fd)
+
+
+def _read_seen(dir_fd: int | None, base: str, name: str) -> set:
+    fd = _open(dir_fd, base, name, os.O_RDONLY | _NOFOLLOW)
+    with os.fdopen(fd, encoding="utf-8") as fh:
+        return set(json.load(fh))
+
+
+def _write_seen(dir_fd: int | None, base: str, name: str, seen: set) -> None:
+    """Write the state through a new file next to it, then rename it into place."""
+    tmp = f"{name}.{os.getpid()}.tmp"
+    fd = _open(dir_fd, base, tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _NOFOLLOW)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(sorted(seen), fh)
+        if dir_fd is None:
+            os.replace(os.path.join(base, tmp), os.path.join(base, name))
+        else:
+            os.rename(tmp, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+    except BaseException:
+        try:
+            if dir_fd is None:
+                os.unlink(os.path.join(base, tmp))
+            else:
+                os.unlink(tmp, dir_fd=dir_fd)
+        except OSError:
+            pass
+        raise
+
+
 def first_per_session(nudges: list[str], payload: dict) -> list[str]:
     """Keep only nudges whose rule has not fired in this session yet.
 
@@ -114,26 +199,32 @@ def first_per_session(nudges: list[str], payload: dict) -> list[str]:
     key = _session_key(payload)
     if not key:
         return nudges
-    path = os.path.join(tempfile.gettempdir(), f"file-search-hook-seen-{key}.json")
+    state = _state_dir()
+    if state is None:
+        return nudges
+    dir_fd, base = state
+    name = f"seen-{key}.json"
     try:
-        with open(path, encoding="utf-8") as fh:
-            seen = set(json.load(fh))
-    except (OSError, ValueError):
-        seen = set()
-    fresh = []
-    for n in nudges:
-        h = hashlib.sha256(n.encode("utf-8")).hexdigest()[:12]
-        if h in seen:
-            continue
-        seen.add(h)
-        fresh.append(n)
-    if fresh:
         try:
-            with open(path, "w", encoding="utf-8") as fh:
-                json.dump(sorted(seen), fh)
-        except OSError:
-            pass
-    return fresh
+            seen = _read_seen(dir_fd, base, name)
+        except (OSError, ValueError):
+            seen = set()
+        fresh = []
+        for n in nudges:
+            h = hashlib.sha256(n.encode("utf-8")).hexdigest()[:12]
+            if h in seen:
+                continue
+            seen.add(h)
+            fresh.append(n)
+        if fresh:
+            try:
+                _write_seen(dir_fd, base, name, seen)
+            except OSError:
+                pass
+        return fresh
+    finally:
+        if dir_fd is not None:
+            os.close(dir_fd)
 
 
 def main() -> int:
