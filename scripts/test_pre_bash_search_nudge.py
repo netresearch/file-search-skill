@@ -139,7 +139,8 @@ def main() -> int:
                     os.symlink(target, state)
                 else:
                     os.mkdir(state)
-                    os.chmod(state, 0o640)
+                    # Owner may enter and write; the group may read and enter.
+                    subprocess.run(["chmod", "750", state], check=True)
                 usid = f"test-unsafe-{uuid.uuid4()}"
                 warned = [
                     "systemMessage" in run("grep -rn A src/", usid, other_tmp)
