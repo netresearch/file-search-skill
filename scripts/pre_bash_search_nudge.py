@@ -22,6 +22,7 @@ import hashlib
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 
@@ -105,6 +106,59 @@ def _session_key(payload: dict) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
+_NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
+
+
+def _state_dir() -> str | None:
+    """The user's own state directory under the temp directory, or None.
+
+    The directory is created with mode 0700. An existing one is used only when
+    it is a real directory (not a symlink) owned by the current user and closed
+    to group and others; anything else returns None and the caller shows every
+    reminder.
+    """
+    getuid = getattr(os, "getuid", None)
+    suffix = str(getuid()) if getuid else "user"
+    path = os.path.join(tempfile.gettempdir(), f"file-search-hook-{suffix}")
+    try:
+        os.mkdir(path, 0o700)
+    except FileExistsError:
+        pass
+    except OSError:
+        return None
+    try:
+        st = os.lstat(path)
+    except OSError:
+        return None
+    if not stat.S_ISDIR(st.st_mode):
+        return None
+    if getuid and (st.st_uid != getuid() or st.st_mode & 0o077):
+        return None
+    return path
+
+
+def _read_seen(path: str) -> set:
+    fd = os.open(path, os.O_RDONLY | _NOFOLLOW)
+    with os.fdopen(fd, encoding="utf-8") as fh:
+        return set(json.load(fh))
+
+
+def _write_seen(path: str, seen: set) -> None:
+    """Write the state through a new file next to it, then rename it into place."""
+    tmp = f"{path}.{os.getpid()}.tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(sorted(seen), fh)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 def first_per_session(nudges: list[str], payload: dict) -> list[str]:
     """Keep only nudges whose rule has not fired in this session yet.
 
@@ -114,10 +168,12 @@ def first_per_session(nudges: list[str], payload: dict) -> list[str]:
     key = _session_key(payload)
     if not key:
         return nudges
-    path = os.path.join(tempfile.gettempdir(), f"file-search-hook-seen-{key}.json")
+    state_dir = _state_dir()
+    if state_dir is None:
+        return nudges
+    path = os.path.join(state_dir, f"seen-{key}.json")
     try:
-        with open(path, encoding="utf-8") as fh:
-            seen = set(json.load(fh))
+        seen = _read_seen(path)
     except (OSError, ValueError):
         seen = set()
     fresh = []
@@ -129,8 +185,7 @@ def first_per_session(nudges: list[str], payload: dict) -> list[str]:
         fresh.append(n)
     if fresh:
         try:
-            with open(path, "w", encoding="utf-8") as fh:
-                json.dump(sorted(seen), fh)
+            _write_seen(path, seen)
         except OSError:
             pass
     return fresh

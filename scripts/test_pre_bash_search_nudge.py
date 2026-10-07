@@ -6,6 +6,8 @@
 import hashlib
 import json
 import os
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -43,7 +45,14 @@ CASES = [
 ]
 
 
-def run(cmd: str, session_id: str | None = None) -> str:
+# Every run gets a temp directory of its own (TMPDIR), so the cases neither see
+# nor change state that a real session keeps in the system temp directory.
+TMP = tempfile.mkdtemp(prefix="file-search-hook-test-")
+_getuid = getattr(os, "getuid", None)
+STATE_DIR = os.path.join(TMP, f"file-search-hook-{_getuid() if _getuid else 'user'}")
+
+
+def run(cmd: str, session_id: str | None = None, tmpdir: str = TMP) -> str:
     payload = {"tool_name": "Bash", "tool_input": {"command": cmd}}
     if session_id is not None:
         payload["session_id"] = session_id
@@ -53,6 +62,7 @@ def run(cmd: str, session_id: str | None = None) -> str:
         capture_output=True,
         text=True,
         check=False,
+        env={**os.environ, "TMPDIR": tmpdir, "TEMP": tmpdir, "TMP": tmpdir},
     )
     return p.stdout
 
@@ -65,6 +75,7 @@ def run_raw(payload_text: str) -> tuple[int, str]:
         capture_output=True,
         text=True,
         check=False,
+        env={**os.environ, "TMPDIR": TMP, "TEMP": TMP, "TMP": TMP},
     )
     return p.returncode, p.stdout
 
@@ -98,18 +109,61 @@ def main() -> int:
                 f"  {'OK  ' if ok else 'FEHL'} {name:44} erwartet={want!s:12} erhalten={got}"
             )
 
+        # The state lives in a directory of the user's own under the temp
+        # directory, closed to group and others.
+        st = os.lstat(STATE_DIR) if os.path.lexists(STATE_DIR) else None
+        private = (
+            st is not None
+            and stat.S_ISDIR(st.st_mode)
+            and (os.name == "nt" or stat.S_IMODE(st.st_mode) == 0o700)
+        )
+        fails += 0 if private else 1
+        print(
+            f"  {'OK  ' if private else 'FEHL'} {'Zustand in eigenem 0700-Verzeichnis':44} "
+            f"erwartet=True         erhalten={private}"
+        )
+
+        # A state directory that is not the user's own private directory is not
+        # used: the hook shows every reminder and writes nothing through it.
+        if os.name != "nt":
+            for name, prepare in (
+                ("Zustandsverzeichnis ist ein Symlink", "symlink"),
+                ("Zustandsverzeichnis fuer alle schreibbar", "open"),
+            ):
+                other_tmp = tempfile.mkdtemp(prefix="file-search-hook-test-", dir=TMP)
+                target = os.path.join(other_tmp, "elsewhere")
+                os.mkdir(target, 0o700)
+                state = os.path.join(other_tmp, os.path.basename(STATE_DIR))
+                if prepare == "symlink":
+                    os.symlink(target, state)
+                else:
+                    os.mkdir(state)
+                    os.chmod(state, 0o777)
+                usid = f"test-unsafe-{uuid.uuid4()}"
+                warned = [
+                    "systemMessage" in run("grep -rn A src/", usid, other_tmp)
+                    for _ in range(2)
+                ]
+                written = os.listdir(target) + (
+                    os.listdir(state) if prepare == "open" else []
+                )
+                ok = warned == [True, True] and written == []
+                fails += 0 if ok else 1
+                print(
+                    f"  {'OK  ' if ok else 'FEHL'} {name:44} "
+                    f"erwartet=2x Warnung, nichts geschrieben erhalten={warned} {written}"
+                )
+
         # A session id carrying separators must not steer the state file out of
-        # the temp directory.
+        # the state directory.
         evil_sid = "../../../../tmp/evil-search"
         run("grep -rn A src/", evil_sid)
         escaped = os.path.exists("/tmp/evil-search")
-        # The state file must be named after the digest and sit in the temp
+        # The state file must be named after the digest and sit in the state
         # directory itself; an unhashed id fails this even where the escaped
         # write itself went nowhere.
         digest = hashlib.sha256(evil_sid.encode("utf-8")).hexdigest()[:16]
-        in_tmp = os.path.isfile(
-            os.path.join(tempfile.gettempdir(), f"file-search-hook-seen-{digest}.json")
-        )
+        in_tmp = os.path.isfile(os.path.join(STATE_DIR, f"seen-{digest}.json"))
         escaped = escaped or not in_tmp
         ok = not escaped
         fails += 0 if ok else 1
@@ -123,9 +177,7 @@ def main() -> int:
         bad_sid = f"test-badstate-{uuid.uuid4()}"
         bad_key = hashlib.sha256(bad_sid.encode("utf-8")).hexdigest()[:16]
         with open(
-            os.path.join(
-                tempfile.gettempdir(), f"file-search-hook-seen-{bad_key}.json"
-            ),
+            os.path.join(STATE_DIR, f"seen-{bad_key}.json"),
             "w",
             encoding="utf-8",
         ) as fh:
@@ -163,9 +215,7 @@ def main() -> int:
                 f"erwartet=(0, '') erhalten=({got[0]}, {len(got[1])} Zeichen)"
             )
     finally:
-        for stale in os.listdir(tempfile.gettempdir()):
-            if stale.startswith("file-search-hook-seen-"):
-                os.unlink(os.path.join(tempfile.gettempdir(), stale))
+        shutil.rmtree(TMP, ignore_errors=True)
 
     print("  ---- Fehlschlaege:", fails)
     return 1 if fails else 0
