@@ -4,6 +4,7 @@
 """Cases for scripts/pre_bash_search_nudge.py — run it, read what it says."""
 
 import hashlib
+import importlib.util
 import json
 import os
 import shutil
@@ -128,7 +129,7 @@ def main() -> int:
         if os.name != "nt":
             for name, prepare in (
                 ("Zustandsverzeichnis ist ein Symlink", "symlink"),
-                ("Zustandsverzeichnis fuer alle schreibbar", "open"),
+                ("Zustandsverzeichnis fuer die Gruppe lesbar", "open"),
             ):
                 other_tmp = tempfile.mkdtemp(prefix="file-search-hook-test-", dir=TMP)
                 target = os.path.join(other_tmp, "elsewhere")
@@ -138,7 +139,7 @@ def main() -> int:
                     os.symlink(target, state)
                 else:
                     os.mkdir(state)
-                    os.chmod(state, 0o777)
+                    os.chmod(state, 0o640)
                 usid = f"test-unsafe-{uuid.uuid4()}"
                 warned = [
                     "systemMessage" in run("grep -rn A src/", usid, other_tmp)
@@ -153,6 +154,31 @@ def main() -> int:
                     f"  {'OK  ' if ok else 'FEHL'} {name:44} "
                     f"erwartet=2x Warnung, nichts geschrieben erhalten={warned} {written}"
                 )
+
+            # A state file that is a symlink is not followed: its target is
+            # neither read as state nor written.
+            key = hashlib.sha256(b"test-planted").hexdigest()[:16]
+            sys.dont_write_bytecode = True  # no __pycache__ beside the hook
+            spec = importlib.util.spec_from_file_location("nudge", HOOK)
+            nudge = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(nudge)
+            hashes = [
+                hashlib.sha256(n.encode("utf-8")).hexdigest()[:12]
+                for n in nudge.detect("grep -rn A src/")
+            ]
+            planted = os.path.join(TMP, "planted.json")
+            with open(planted, "w", encoding="utf-8") as fh:
+                json.dump(hashes, fh)
+            os.symlink(planted, os.path.join(STATE_DIR, f"seen-{key}.json"))
+            warned = "systemMessage" in run("grep -rn A src/", "test-planted")
+            with open(planted, encoding="utf-8") as fh:
+                untouched = json.load(fh) == hashes
+            ok = warned and untouched
+            fails += 0 if ok else 1
+            print(
+                f"  {'OK  ' if ok else 'FEHL'} {'Zustandsdatei ist ein Symlink':44} "
+                f"erwartet=Warnung, Ziel unveraendert erhalten={warned} {untouched}"
+            )
 
         # A session id carrying separators must not steer the state file out of
         # the state directory.
