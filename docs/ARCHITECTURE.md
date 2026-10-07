@@ -52,7 +52,7 @@ Detailed guides for each tool:
 
 **Output.** When a rule fires for the first time in a session, the script prints one JSON object with `systemMessage` (the reminders, prefixed `file-search:`) and `suppressOutput: true`; the command runs unchanged. Otherwise it prints nothing. The hook never denies a command. Every path exits 0.
 
-**State.** For the once-per-rule-per-session behaviour the script keeps a JSON list of hashes of the reminders already shown in `file-search-hook-seen-<first 16 hex of SHA-256(session id)>.json` in the system temp directory (`tempfile.gettempdir()`). Hashing the session id keeps the file name inside that directory whatever the payload contains. When there is no session id, or the file cannot be read or written, every reminder is shown; a state file whose content makes `set()` or `sorted()` fail (a number, `null`, a list of lists or of numbers) ends the run through the top-level guard, with exit 0 and no reminder. An object or a string is read as the set of its keys or characters, and the reminder is shown.
+**State.** For the once-per-rule-per-session behaviour the script keeps a JSON list of hashes of the reminders already shown in `seen-<first 16 hex of SHA-256(session id)>.json` inside `file-search-hook-<uid>/` in the system temp directory (`tempfile.gettempdir()`). The script creates that directory with mode 0700 and uses it only while it is a real directory owned by the user and closed to group and others. It opens the state file with `O_NOFOLLOW` and writes it through a new file that is renamed into place. Hashing the session id keeps the file name inside that directory whatever the payload contains. When there is no session id, the directory is not usable, or the file cannot be read or written, every reminder is shown; a state file whose content makes `set()` or `sorted()` fail (a number, `null`, a list of lists or of numbers) ends the run through the top-level guard, with exit 0 and no reminder. An object or a string is read as the set of its keys or characters, and the reminder is shown.
 
 ### Evals (`skills/file-search/evals/`)
 
@@ -87,8 +87,8 @@ Agent proposes Bash command
         │
         ▼
 Claude Code ── JSON payload (stdin) ──▶ pre_bash_search_nudge.py
-        ▲                                   │  reads/writes seen-state file
-        │                                   │  in the system temp directory
+        ▲                                   │  reads/writes seen-state file in its
+        │                                   │  own 0700 directory under the temp dir
         └──── systemMessage or nothing (stdout), exit 0
 ```
 

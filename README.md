@@ -143,9 +143,9 @@ The behavioural tests of the PreToolUse hook need only Python 3.10 or later:
 python3 scripts/test_pre_bash_search_nudge.py
 ```
 
-- The script runs `scripts/pre_bash_search_nudge.py` as a subprocess with a hook payload per case and checks the output. It covers the three reminders (`find`, recursive `grep`, plain `grep`), the commands that must stay silent (`rg`, `fd`, a `grep` behind a pipe, a `grep` on a `.json` file, search commands that only appear in a PR body, an `echo` or a `gh api -f body=` value), the once-per-rule-per-session deduplication (a second firing of the same rule is silent, another rule still fires, a new session warns again), and that a session id cannot steer the state file out of the temp directory.
+- The script runs `scripts/pre_bash_search_nudge.py` as a subprocess with a hook payload per case and checks the output. It covers the three reminders (`find`, recursive `grep`, plain `grep`), the commands that must stay silent (`rg`, `fd`, a `grep` behind a pipe, a `grep` on a `.json` file, search commands that only appear in a PR body, an `echo` or a `gh api -f body=` value), the once-per-rule-per-session deduplication (a second firing of the same rule is silent, another rule still fires, a new session warns again), that the state is kept in a 0700 directory of the user's own and that a symlinked or group- or world-writable state directory is not used, and that a session id cannot steer the state file out of that directory.
 - Each case prints one line: `OK` or `FEHL`, the case name, the expected result (`erwartet`) and the actual one (`ok` or `erhalten`). The last line is `---- Fehlschlaege: N`, the number of failing cases; the script exits 1 when N is not 0.
-- When it finishes, the script deletes every `file-search-hook-seen-*` file in the system temp directory, so reminders already shown in a running session appear once more.
+- The cases run the hook with `TMPDIR` pointing at a temporary directory of their own, which the script removes when it finishes; the state of a running session is not touched.
 
 In CI, the Skill Tests workflow (`.github/workflows/tests.yml`) runs the script on every pull request and on pushes to `main`.
 
