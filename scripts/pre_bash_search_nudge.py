@@ -112,7 +112,9 @@ _NOFOLLOW = getattr(os, "O_NOFOLLOW", 0)
 _DIR_FD = (
     hasattr(os, "O_DIRECTORY")
     and os.open in os.supports_dir_fd
-    and os.replace in os.supports_dir_fd
+    # os.replace takes the same dir_fd arguments but is never listed in
+    # supports_dir_fd; os.rename is, and on POSIX it also replaces the target.
+    and os.rename in os.supports_dir_fd
 )
 
 
@@ -176,7 +178,7 @@ def _write_seen(dir_fd: int | None, base: str, name: str, seen: set) -> None:
         if dir_fd is None:
             os.replace(os.path.join(base, tmp), os.path.join(base, name))
         else:
-            os.replace(tmp, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+            os.rename(tmp, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
     except BaseException:
         try:
             if dir_fd is None:

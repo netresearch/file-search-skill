@@ -184,6 +184,16 @@ def main() -> int:
                 f"erwartet=Warnung, Ziel unveraendert erhalten={warned} {untouched}"
             )
 
+        # Where the platform offers dir_fd (Linux, macOS), the hook uses the
+        # descriptor-based code path.
+        if sys.platform.startswith(("linux", "darwin")):
+            ok = bool(nudge._DIR_FD)
+            fails += 0 if ok else 1
+            print(
+                f"  {'OK  ' if ok else 'FEHL'} {'Zugriff ueber Verzeichnis-Deskriptor':44} "
+                f"erwartet=True         erhalten={ok}"
+            )
+
         # A session id carrying separators must not steer the state file out of
         # the state directory.
         evil_sid = "../../../../tmp/evil-search"
