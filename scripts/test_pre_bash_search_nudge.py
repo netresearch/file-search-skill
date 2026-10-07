@@ -168,12 +168,15 @@ def main() -> int:
                 for n in nudge.detect("grep -rn A src/")
             ]
             planted = os.path.join(TMP, "planted.json")
+            # Laid out the way the hook never writes (indented, reversed), so
+            # a write through the link changes these bytes.
+            planted_text = json.dumps(sorted(hashes, reverse=True), indent=2) + "\n"
             with open(planted, "w", encoding="utf-8") as fh:
-                json.dump(hashes, fh)
+                fh.write(planted_text)
             os.symlink(planted, os.path.join(STATE_DIR, f"seen-{key}.json"))
             warned = "systemMessage" in run("grep -rn A src/", "test-planted")
             with open(planted, encoding="utf-8") as fh:
-                untouched = json.load(fh) == hashes
+                untouched = fh.read() == planted_text
             ok = warned and untouched
             fails += 0 if ok else 1
             print(
