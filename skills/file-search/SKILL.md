@@ -7,7 +7,7 @@ license: "(MIT AND CC-BY-SA-4.0). See LICENSE-MIT and LICENSE-CC-BY-SA-4.0"
 compatibility: "Requires ripgrep (rg), and uv for the plugin's search-reminder hook (runs it on Python 3.11 or later). Optional: fd, ast-grep, rga, tokei, scc, semgrep."
 metadata:
   author: Netresearch DTT GmbH
-  version: "1.8.3"
+  version: "1.8.4"
   repository: https://github.com/netresearch/file-search-skill
 allowed-tools: Bash(rg:*) Bash(fd:*) Bash(sg:*) Bash(rga:*) Bash(tokei:*) Bash(scc:*) Bash(semgrep:*) Read Glob Grep
 ---
