@@ -138,7 +138,7 @@ def _state_dir() -> tuple[int | None, str] | None:
     try:
         os.mkdir(path, 0o700)
     except FileExistsError:
-        pass
+        pass  # an earlier run created it; ownership and mode are checked below
     except OSError:
         return None
     fd = None
@@ -191,7 +191,7 @@ def _write_seen(dir_fd: int | None, base: str, name: str, seen: set) -> None:
             else:
                 os.unlink(tmp, dir_fd=dir_fd)
         except OSError:
-            pass
+            pass  # best-effort cleanup; the original exception is re-raised below
         raise
 
 
@@ -225,7 +225,7 @@ def first_per_session(nudges: list[str], payload: dict) -> list[str]:
             try:
                 _write_seen(dir_fd, base, name, seen)
             except OSError:
-                pass
+                pass  # dedup state is optional; an unwritable cache only repeats a reminder
         return fresh
     finally:
         if dir_fd is not None:
